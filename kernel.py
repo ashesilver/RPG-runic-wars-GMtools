@@ -7,20 +7,7 @@ import os,warnings,sys
 import pygame
 from pygame.locals import *
 
-def initialize(screen_l,screen_h):
-	#returns pygame object (weird stuff)
-	screen_l=pygame.display.Info().current_w
-	screen_h=pygame.display.Info().current_h
-
-	if len(sys.argv)>=3:
-		screen = pygame.display.set_mode(int(sys.argv[1]),int(sys.argv[2]))
-		sys.argv.pop(2);sys.argv.pop(1)
-	else:
-		screen = pygame.display.set_mode(screen_l,screen_h)
-	if len(sys.argv)==2:
-		pygame.display.set_caption(sys.argv[1])
-	pygame.display.flip()
-	return screen
+	
 
 
 class Graphics():
@@ -28,14 +15,42 @@ class Graphics():
 	"""Graphic handler for all pygame graphicEvents"""
 
 	screen = ()
+	screen_l = pygame.display.Info().current_w
+	screen_h = pygame.display.Info().current_h
 
-	def __init__(self):
+	def __init__(self,size=(None,None)):
+
+		if size!=(None,None):
+			(Graphics.screen_l,Graphics.screen_h) = size
+
+		elif len(sys.argv)>=3:
+			Graphics.screen_l,Graphics.screen_h=int(sys.argv[1]),int(sys.argv[2])
+			sys.argv.pop(3);sys.argv.pop(2)
 		
-		graphicsAttributes(screen_h = screen_h, screen_l = screen_l , self)
+		screen = pygame.display.set_mode(screen_l,screen_h)
+		if len(sys.argv)==2:
+			pygame.display.set_caption(sys.argv[1])
+		pygame.display.flip()
 
 	def __del__(self):
 		pygame.quit()
 		del self
+
+	def graphicsAttributes():
+
+		if os.name == "posix" :
+			self.keys_nb = [273,276,274,275,13,271,27,38,233,34,39]
+		elif os.name == "nt" :
+			self.keys_nb = [273,276,274,275,13,271,27,49,50,51,52]
+		else :
+			warnings.warn("{} OS ins't supported for pygame kernel {}".format(os.name, __version__),Warning)
+			self.keys_nb = []
+		self.keys_name = ["UpARR","LeftARR","DownARR","RightARR","Enter","ENTER","esc","1","2","3","4"]
+
+		self.leftClick = 0
+		self.rightClick = 0
+
+		self._cursor = pygame.mouse.get_cursor()
 
 	#DISPLAY METHODS
 	
@@ -120,21 +135,6 @@ class Graphics():
 		img = pygame.transform.scale(img, [ int(x*self.screen_h/60) for x in size] )
 		return img
 
-	def graphicsAttributes():
-
-		if os.name == "posix" :
-			self.keys_nb = [273,276,274,275,13,271,27,38,233,34,39]
-		elif os.name == "nt" :
-			self.keys_nb = [273,276,274,275,13,271,27,49,50,51,52]
-		else :
-			warnings.warn("{} OS ins't supported for pygame kernel {}".format(os.name, __version__),Warning)
-			self.keys_nb = []
-		self.keys_name = ["UpARR","LeftARR","DownARR","RightARR","Enter","ENTER","esc","1","2","3","4"]
-
-		self.leftClick = 0
-		self.rightClick = 0
-
-		self._cursor = pygame.mouse.get_cursor()
 	##### obsolete
 
 	"""
