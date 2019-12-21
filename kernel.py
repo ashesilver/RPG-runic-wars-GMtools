@@ -13,10 +13,10 @@ from pygame.locals import *
 class Graphics():
 
 	"""Graphic handler for all pygame graphicEvents"""
-
+	pygame.init()
 	screen = ()
-	screen_l = pygame.display.Info().current_w
-	screen_h = pygame.display.Info().current_h
+	screen_l = int(pygame.display.Info().current_w*90/100)
+	screen_h = int(pygame.display.Info().current_h*90/100)
 
 	def __init__(self,size=(None,None)):
 
@@ -24,10 +24,9 @@ class Graphics():
 			(Graphics.screen_l,Graphics.screen_h) = size
 
 		elif len(sys.argv)>=3:
-			Graphics.screen_l,Graphics.screen_h=int(sys.argv[1]),int(sys.argv[2])
-			sys.argv.pop(3);sys.argv.pop(2)
+			Graphics.screen_l,Graphics.screen_h=int(sys.argv[2]),int(sys.argv[3])
 		
-		screen = pygame.display.set_mode(screen_l,screen_h)
+		Graphics.screen = pygame.display.set_mode((self.screen_l,self.screen_h))
 		if len(sys.argv)==2:
 			pygame.display.set_caption(sys.argv[1])
 		pygame.display.flip()
@@ -36,7 +35,7 @@ class Graphics():
 		pygame.quit()
 		del self
 
-	def graphicsAttributes():
+	def loadGraphicsAttributes(self):
 
 		if os.name == "posix" :
 			self.keys_nb = [273,276,274,275,13,271,27,38,233,34,39]
@@ -52,20 +51,28 @@ class Graphics():
 
 		self._cursor = pygame.mouse.get_cursor()
 
+		self.square = pygame.image.load("./img/whitesquare.png").convert()
+
+		self._bckg=None
+
 	#DISPLAY METHODS
 	
 	def displaySquare(self,coordinates):
-		self.screen.blit(self.square, [ int(x*(self.screen)) for x in coordinates])
+		self.screen.blit(self.square, [ int(x*[self.screen_l,self.screen_h][coordinates.index(x)]) for x in coordinates])
 
 	def displayActivatable(self,element,displaySet=True):
-		elif element.image == None:
-			img = pygame.image.load(element.imageAdress).convert()
-			img = pygame.transform.scale(img, [ int(x*self.screen_h/60) for x in element.size] )
-			element.image = img
+		if element["image"] == None:
+			img = pygame.image.load(element["imageAdress"]).convert()
+			img = pygame.transform.scale(img, element["size"] )
+			element["image"] = img
 		else :
-			img = element.image
+			img = element["image"]
 		if displaySet :
-			self.screen.blit(img, [ int(x*self.screen_h/60) for x in element.position])
+			self.screen.blit(img, element["position"])
+		return element
+
+	def load_image(self,Adr,size):
+		return self.displayActivatable({"image":None,"imageAdress":Adr,"size":size},False)["image"]
 	
 	#background handler
 	@property
@@ -76,13 +83,14 @@ class Graphics():
 	def bckg(self, adress):
 		self._bckg = pygame.image.load(adress).convert()
 		self._bckg = pygame.transform.scale(self._bckg, (self.screen_l,self.screen_h))
+		print("background set")
 	
 	def displayBackgroundUpdate(self,imageAdress=None,displaySet=True):
 		if not imageAdress==None:
 			self.bckg = pygame.image.load(imageAdress).convert()
 			self.bckg = pygame.transform.scale(self.bckg, (self.screen_l,self.screen_h))
 		if displaySet :
-			self.screen.blit(self.bckg,(0,0))	
+			self.screen.blit(self.bckg,(0,0))
 
 	def generalDisplayUpdate(self):
 		pygame.display.flip()
@@ -130,11 +138,6 @@ class Graphics():
 		self.rightClick = pygame.mouse.get_pressed()[2]
 		return pygame.mouse.get_pos()
 
-	def load_image(self,Adr,size):
-		img = pygame.image.load(Adr).convert()
-		img = pygame.transform.scale(img, [ int(x*self.screen_h/60) for x in size] )
-		return img
-
 	##### obsolete
 
 	"""
@@ -143,6 +146,69 @@ class Graphics():
 			pygame.draw.line(self.screen,[125,125,125],(x*self.screen_l/60,0),(x*self.screen_l/60,self.screen_h))
 		for y in range(1,61):
 			pygame.draw.line(self.screen,[125,125,125],(0,y*self.screen_h/60),(self.screen_l,y*self.screen_h/60))"""
+
+class Button(Graphics):
+	"""UI clickable elements """
+	def __init__(self,pos,width,height,*imgadr):
+		self.zone =[pos,[width,height]]
+		self.clicked= False
+		self.hover=False
+		self.imgdata = {
+			"base":None,
+			"hov":None,
+			"onclick":None
+		}
+		(self.base, self.onclick, self.hov) = imgadr
+
+	@property
+	def base(self):
+		return self._base
+
+	@base.setter
+	def base(self,adress):
+		self.imgdata["base"]=self.load_image(adress,self.zone[1])
+
+	@property
+	def onclick(self):
+		return self._onclick
+
+	@onclick.setter
+	def onclick(self,adress):
+		self.imgdata["onclick"]=self.load_image(adress,self.zone[1])
+
+	@property
+	def hov(self):
+		return self._hov
+	
+	@hov.setter
+	def hov(self,adress):
+		self.imgdata["hov"]=self.load_image(adress,self.zone[1])
+	
+	def mouseover(self):
+		mp = self.getMouse()
+		if (( self.zone[0][0] <= mp[0] and self.zone[0][0]+self.zone[1][0] >= mp[0] ) and ( self.zone[0][1] <= mp[1] and self.zone[0][1]+self.zone[1][1] >= mp[1] )):
+			if self.leftClick :
+				self.clicked = True
+			elif self.clicked and not self.leftClick :
+				return True
+			else :
+				self.hover = True
+		else :
+			self.hover = False
+			self.clicked = False
+		return False
+
+	def graphicUpdate(self):
+		if self.clicked:
+			self.displayActivatable({"image":self.imgdata["onclick"],"position":self.zone[0]})
+		elif self.hover:
+			self.displayActivatable({"image":self.imgdata["hov"],"position":self.zone[0]})
+		else :
+			self.displayActivatable({"image":self.imgdata["base"],"position":self.zone[0]})
+
+	def __call__(self):
+		self.graphicUpdate()
+		return self.mouseover()
 
 
 if __name__ == '__main__':
