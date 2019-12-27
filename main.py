@@ -2,28 +2,33 @@ import kernel
 window = kernel.Graphics()
 window.loadGraphicsAttributes()
 
+
+#Title screen
 window.bckg = "./img/start_background.png"
-
-
 
 startbutton = kernel.Button(
 	[647*window.screen_l/1600,373*window.screen_h/900],
 	int(297*window.screen_l/1600),int(131*window.screen_h/900),
 	"img/startbutton_base.png","img/startbutton_onclick.png","img/startbutton_hov.png"
 	)
-menu = True
+titlescreen = True
+#############
 
-
-
-keyboard_inputs=[]
-while type(keyboard_inputs)!=bool :
+exit = False
+#keyboard_inputs=[]
+while not (exit) :
 	window.displayBackgroundUpdate()
 
-	if menu :
+	if titlescreen :
 		if startbutton() :
-			menu = False
+			titlescreen = False
 			window.bckg= "./img/transition_screen.png"
+			mainmenu = True
+	elif mainmenu :
+		pass
 
 
-	window()
-	keyboard_inputs = window.getKeys()
+
+
+	exit = window()
+	#keyboard_inputs = window.getKeys()

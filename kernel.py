@@ -83,7 +83,6 @@ class Graphics():
 	def bckg(self, adress):
 		self._bckg = pygame.image.load(adress).convert()
 		self._bckg = pygame.transform.scale(self._bckg, (self.screen_l,self.screen_h))
-		print("background set")
 	
 	def displayBackgroundUpdate(self,imageAdress=None,displaySet=True):
 		if not imageAdress==None:
@@ -97,6 +96,7 @@ class Graphics():
 
 	def __call__(self):
 		self.generalDisplayUpdate()
+		return self.mainloop()
 
 	@property
 	def cursor(self):
@@ -114,18 +114,20 @@ class Graphics():
 
 	#GETKEYS/MOUSE
 
-	def getKeys(self):
-		#no parameters
-		#gives a "quit = true" if the player presses Alt+F4, otherwise gives the pressed keys
-
-		keys_input = []
-
+	def mainloop(self):
 		all_keys = pygame.key.get_pressed()
 		if all_keys[pygame.K_F4] and (all_keys[pygame.K_LALT] or all_keys[pygame.K_RALT]):
 			return(True)
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT :
 				return(True)
+
+		return False
+
+	def getKeys(self):
+		keys_input = []
+		all_keys = pygame.key.get_pressed()
+
 		for k in self.keys_nb:
 			if all_keys[k] :
 				keys_input.append(self.keys_name[self.keys_nb.index(k)])
@@ -209,6 +211,31 @@ class Button(Graphics):
 	def __call__(self):
 		self.graphicUpdate()
 		return self.mouseover()
+
+class Textzone(Graphics):
+	"""docstring for Textzone"""
+	def __init__(self, fontsize, coordinates, maxlength):
+		
+		self.fontsize = fontsize
+		self.maxlength = maxlength
+		self.textfont = pygame.font.Font(None, self.fontsize)
+		self.focused = False
+
+	def write(self,text):
+		self.screen.blit(self.textfont.render(text, True, (195, 195, 195)), self.coordinates)
+
+	def mouseover(self):
+		mp = self.getMouse()
+		if (( self.coordinates[0] <= mp[0] and self.coordinates[0]+self.fontsize*self.maxlength >= mp[0] ) and ( self.coordinates[1]-20 <= mp[1] and self.coordinates[1]+self.fontsize*2 >= mp[1] )):
+			if self.leftClick :
+				self.focused = True
+			else :
+				self.hover = True
+		elif self.hover :
+			self.hover = False
+			if self.leftClick :
+				self.focused = False
+		
 
 
 if __name__ == '__main__':
