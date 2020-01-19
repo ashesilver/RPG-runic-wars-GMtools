@@ -221,8 +221,10 @@ class Textzone(Graphics):
 		self.textfont = pygame.font.Font(None, self.fontsize)
 		self.focused = False
 
-	def write(self,text):
-		self.screen.blit(self.textfont.render(text, True, (195, 195, 195)), self.coordinates)
+	def write(self, text = None):
+		if text == None :
+			self.display = self.textfont.render(text, True, (195, 195, 195))
+		self.screen.blit(self.display, self.coordinates)
 
 	def mouseover(self):
 		mp = self.getMouse()
