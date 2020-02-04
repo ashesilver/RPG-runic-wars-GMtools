@@ -17,6 +17,7 @@ class Graphics():
 	screen = ()
 	screen_l = int(pygame.display.Info().current_w*90/100)
 	screen_h = int(pygame.display.Info().current_h*90/100)
+	clock = pygame.time.Clock()
 
 	def __init__(self,size=(None,None)):
 
@@ -93,9 +94,11 @@ class Graphics():
 
 	def generalDisplayUpdate(self):
 		pygame.display.flip()
+		
 
-	def __call__(self):
+	def __call__(self, max_framerate=90):
 		self.generalDisplayUpdate()
+		Graphics.clock.tick(max_framerate)
 		return self.mainloop()
 
 	@property
@@ -217,6 +220,7 @@ class Textzone(Graphics):
 	def __init__(self, fontsize, coordinates, maxlength):
 		
 		self.fontsize = fontsize
+		self.coordinates = coordinates
 		self.maxlength = maxlength
 		self.textfont = pygame.font.Font(None, self.fontsize)
 		self.focused = False
@@ -241,4 +245,13 @@ class Textzone(Graphics):
 
 
 if __name__ == '__main__':
-	pygame.init()
+	print("kernel can't be launched\nNow searching for exe/bat/main files")
+	files = [];path ="./"
+	for file in os.listdir(path):
+		if ".py" in file :
+			print("found {} in {}".format(file,path))
+			files.append(path+file)
+	for x in files:
+		if "main" in x.lower():
+			print("Now starting {}".format(x))
+			os.system("python {}".format(x))

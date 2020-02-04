@@ -22,7 +22,7 @@ while not (exit) :
 	if titlescreen :
 		if startbutton() :
 			titlescreen = False
-			window.bckg= "./img/transition_screen.png"
+			window.bckg = "./img/transition_screen.png"
 			mainmenu = True
 	elif mainmenu :
 		pass
