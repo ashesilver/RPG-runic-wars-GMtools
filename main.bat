@@ -1,1 +1,1 @@
-start main.py GMtools 1229 691
+python main.py -c GMtools -r 1229 691
