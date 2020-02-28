@@ -14,6 +14,10 @@ startbutton = kernel.Button(
 titlescreen = True
 #############
 
+#Main menu
+testzone = kernel.Textzone(fontsize=24,coordinates=[900,900],maxlength=30)
+
+
 exit = False
 #keyboard_inputs=[]
 while not (exit) :
@@ -22,10 +26,10 @@ while not (exit) :
 	if titlescreen :
 		if startbutton() :
 			titlescreen = False
-			window.bckg = "./img/transition_screen.png"
+			window.bckg = "./img/sheeteditor_background.png"
 			mainmenu = True
 	elif mainmenu :
-		pass
+		testzone()
 
 
 

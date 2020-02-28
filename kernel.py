@@ -217,22 +217,24 @@ class Button(Graphics):
 
 class Textzone(Graphics):
 	"""docstring for Textzone"""
-	def __init__(self, fontsize, coordinates, maxlength):
+	def __init__(self, fontsize, coordinates, maxlength = 100, text = "Enter your text here"):
 		
 		self.fontsize = fontsize
 		self.coordinates = coordinates
 		self.maxlength = maxlength
 		self.textfont = pygame.font.Font(None, self.fontsize)
 		self.focused = False
+		self.hover = False
+		self.text = text
 
 	def write(self, text = None):
 		if text == None :
-			self.display = self.textfont.render(text, True, (195, 195, 195))
-		self.screen.blit(self.display, self.coordinates)
+			self.display = self.textfont.render(self.text, True, (0,0,0))
+		self.screen.blit(self.display, [self.coordinates[0],self.coordinates[1]+0.1*self.fontsize])
 
 	def mouseover(self):
 		mp = self.getMouse()
-		if (( self.coordinates[0] <= mp[0] and self.coordinates[0]+self.fontsize*self.maxlength >= mp[0] ) and ( self.coordinates[1]-20 <= mp[1] and self.coordinates[1]+self.fontsize*2 >= mp[1] )):
+		if (( self.coordinates[0] <= mp[0] and self.coordinates[0]+(self.fontsize+1)*self.maxlength >= mp[0] ) and ( self.coordinates[1] <= mp[1] and self.coordinates[1]+self.fontsize*2 >= mp[1] )):
 			if self.leftClick :
 				self.focused = True
 			else :
@@ -241,6 +243,16 @@ class Textzone(Graphics):
 			self.hover = False
 			if self.leftClick :
 				self.focused = False
+
+	def graphicUpdate(self):
+		pygame.draw.rect(self.screen, (255,255,255),[self.coordinates[0],self.coordinates[1],(self.fontsize+1)*self.maxlength,self.fontsize*1.2])
+		self.write()
+
+	def __call__(self):
+		self.graphicUpdate()
+		self.mouseover()
+		#print("focus : {}, hov : {}".format(self.focused,self.hover))
+		return self.text
 		
 
 
