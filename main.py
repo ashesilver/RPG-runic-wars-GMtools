@@ -1,6 +1,5 @@
 import kernel,copy
 window = kernel.Graphics()
-window.loadAllAttributes()
 
 custom_resol_1600_900 = kernel.Customres(1600,900)
 fullHD = kernel.Customres(1920,1080)
@@ -24,6 +23,7 @@ titlescreen = True
 #[900*window.screen_l/1920,900*window.screen_h/1080]
 #Main menu
 testzone = kernel.Textzone(fontsize=24,coordinates=downsizedFullHD.resize(window,[900,900]),maxlength=30)
+testzone.loadKeysAttributes()
 
 
 exit = False
@@ -43,4 +43,4 @@ while not (exit) :
 
 
 	exit = window()
-	keyboard_inputs = window.getKeys()
+	#keyboard_inputs = window.getKeys()

@@ -29,7 +29,7 @@ class Customres(Resolutions):
 
 	def windowDownsize(self):
 		self.screen_l = int(self.screen_l - self.screen_l*0.1)
-		self.screen_h = int(self.screen_h - self.screen_h*0.1)	
+		self.screen_h = int(self.screen_h - self.screen_h*0.1)
 
 
 class Graphics(Resolutions):
@@ -73,6 +73,10 @@ class Graphics(Resolutions):
 			Graphics.screen_l = self.options["resolution"][0]
 			Graphics.screen_h = self.options["resolution"][1]
 		
+		self._bckg = None
+		self.loadKeysAttributes()
+		self.loadMouseAttributes()
+
 		"""
 		elif len(sys.argv)>=3:
 			Graphics.screen_l,Graphics.screen_h=int(sys.argv[2]),int(sys.argv[3])
@@ -89,32 +93,34 @@ class Graphics(Resolutions):
 		pygame.quit()
 		del self
 
-	def loadAllAttributes(self):
-
+	def loadKeysAttributes(self):
+		""" cross-platform compatibility in progress
 		if os.name == "posix" :
-			self.keys_nb = [273,276,274,275,13,271,27,
-				38,233,34,39]
-		elif os.name == "nt" :
-			self.keys_nb = [273,276,274,275,13,271,27,
-				49,50,51,52
-			]
+			self.keys_nb = [
+				273,276,274,275,13,271,27,32,
+				38,233,34,39
+				]"""
+		if os.name == "nt" :
+			self.keys_nb = [273,276,274,275,13,271,27,32,303,304,9,305,306,301,8,
+				49,50,51,52,53,54,55,56,57,48,45,61,
+				113,98,99,100,101,102,103,104,105,106,107,108,59,110,111,112,97,114,115,116,117,118,122,120,121,119]
 		else :
 			warnings.warn("{} OS ins't supported for pygame kernel {}".format(os.name, __version__),Warning)
 			self.keys_nb = []
-		self.keys_name = ["UpARR","LeftARR","DownARR","RightARR","Enter","ENTER","esc",
-			"1","2","3","4",
+		self.keys_name = ["UpARR","LeftARR","DownARR","RightARR","Enter","ENTER","esc"," ","Maj","Maj","Tab","ctrl","ctrl","VerrMaj","Backspace",
+			"&","é","\"","\'","(","-","è","_","ç","à",")","=",
 			"a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"]
 
+	def loadMouseAttributes(self):
 		self.leftClick = 0
 		self.rightClick = 0
 
 		self._cursor = pygame.mouse.get_cursor()
 
+	def loadBasicAttributes(self):
+
 		self.square = pygame.image.load("./img/whitesquare.png").convert()
-
-		self._bckg = None
-
-		self._caption = "pygame kernel" if pygame.display.get_caption()[0]=="pygame window" else sys.argv[1]
+		self._caption = "pygame kernel" if pygame.display.get_caption()[0]=="pygame window" else sys.argv[1]  #### to be finished !!!!
 
 	#DISPLAY METHODS
 	
@@ -207,7 +213,12 @@ class Graphics(Resolutions):
 		for k in self.keys_nb:
 			if all_keys[k] :
 				keys_input.append(self.keys_name[self.keys_nb.index(k)])
-		print(all_keys.index(1))
+		"""
+		try:
+			print(all_keys.index(1))
+		except ValueError:
+			pass"""
+		
 		
 		return keys_input
 
@@ -298,15 +309,43 @@ class Textzone(Graphics):
 		self.textfont = pygame.font.Font(None, self.fontsize)
 		self.focused = False
 		self.hover = False
-		self.text = text
+		self.text = ""
+		self.base = text
 
-	def write(self, text = None):
-		if text == None :
+		self.keylogger = []
+		self.verrMaj = False
+
+	def write(self, text = ""):
+		if text != "":
+			self.text += text
+		if self.text == "" and not self.focused:
+			self.display = self.textfont.render(self.base, True, (0,0,0))
+		else :
 			self.display = self.textfont.render(self.text, True, (0,0,0))
 		self.screen.blit(self.display, [self.coordinates[0],self.coordinates[1]+0.1*self.fontsize])
 
 	def input(self):
-		pass
+		if self.focused :
+			text = ""
+			keys = self.getKeys()
+			if "Backspace" in keys and self.text!="":
+				self.text = self.text[:len(self.text)-1]
+				return ""
+			for x in keys :
+				if not x in self.keylogger :
+					self.keylogger.append(x)
+					if x == "VerrMaj":
+						self.verrMaj = not(self.verrMaj)
+					if len(x) == 1 and ("Maj" in keys or "Maj" in self.keylogger or self.verrMaj):
+						text+=x.upper()
+					elif len(x) == 1 :
+						text+=x.lower()
+			for x in self.keylogger:
+				if not x in keys :
+					self.keylogger.pop(self.keylogger.index(x))
+			return text
+		else :
+			return ""
 
 	def mouseover(self):
 		mp = self.getMouse()
@@ -317,16 +356,16 @@ class Textzone(Graphics):
 				self.hover = True
 		elif self.hover :
 			self.hover = False
-			if self.leftClick :
-				self.focused = False
+		elif self.leftClick :
+			self.focused = False
 
 	def graphicUpdate(self):
-		pygame.draw.rect(self.screen, (255,255,255),[self.coordinates[0],self.coordinates[1],(self.fontsize+1)*self.maxlength,self.fontsize*1.2])
-		self.write()
+		pygame.draw.rect(self.screen, (255,255,255),[self.coordinates[0],self.coordinates[1],int((self.fontsize+0.5)*self.maxlength),int(self.fontsize*1.2)])
+		self.write(self.input())
 
 	def __call__(self):
-		self.graphicUpdate()
 		self.mouseover()
+		self.graphicUpdate()
 		#print("focus : {}, hov : {}".format(self.focused,self.hover))
 		return self.text
 		
