@@ -217,8 +217,8 @@ class Graphics(Resolutions):
 		try:
 			print(all_keys.index(1))
 		except ValueError:
-			pass"""
-		
+			pass
+		"""
 		
 		return keys_input
 
@@ -313,13 +313,15 @@ class Textzone(Graphics):
 		self.base = text
 
 		self.keylogger = []
-		self.verrMaj = False
+		self.backspaceBuffer = 0
 
 	def write(self, text = ""):
 		if text != "":
 			self.text += text
 		if self.text == "" and not self.focused:
 			self.display = self.textfont.render(self.base, True, (0,0,0))
+		if self.text == "" and self.hover:
+			self.display = self.textfont.render(self.base, True, (100,100,100))
 		else :
 			self.display = self.textfont.render(self.text, True, (0,0,0))
 		self.screen.blit(self.display, [self.coordinates[0],self.coordinates[1]+0.1*self.fontsize])
@@ -327,17 +329,26 @@ class Textzone(Graphics):
 	def input(self):
 		if self.focused :
 			text = ""
+			verrMaj = False
 			keys = self.getKeys()
 			if "Backspace" in keys and self.text!="":
-				self.text = self.text[:len(self.text)-1]
+				self.backspaceBuffer += 1
+				self.text = self.text[:len(self.text)-1] if (self.backspaceBuffer % 4) == 0 else self.text
 				return ""
 			for x in keys :
-				if not x in self.keylogger :
+				if x == "VerrMaj":
+						verrMaj = True
+				elif not x in self.keylogger:
 					self.keylogger.append(x)
-					if x == "VerrMaj":
-						self.verrMaj = not(self.verrMaj)
-					if len(x) == 1 and ("Maj" in keys or "Maj" in self.keylogger or self.verrMaj):
-						text+=x.upper()
+					if len(x) == 1 and ("Maj" in keys or "Maj" in self.keylogger or verrMaj):
+						if x in ["&","é","\"","\'","(","-","è","_","ç","à"]:
+							text+=str((["&","é","\"","\'","(","-","è","_","ç","à"].index(x)+1)%10)
+						elif x == ")" :
+							text+="°"
+						elif x == "=":
+							text+="+"
+						else :
+							text+=x.upper()
 					elif len(x) == 1 :
 						text+=x.lower()
 			for x in self.keylogger:
@@ -362,6 +373,9 @@ class Textzone(Graphics):
 	def graphicUpdate(self):
 		pygame.draw.rect(self.screen, (255,255,255),[self.coordinates[0],self.coordinates[1],int((self.fontsize+0.5)*self.maxlength),int(self.fontsize*1.2)])
 		self.write(self.input())
+		if self.text == "" and self.focused :
+			self.backspaceBuffer = 0
+
 
 	def __call__(self):
 		self.mouseover()
@@ -381,4 +395,4 @@ if __name__ == '__main__':
 	for x in files:
 		if "main" in x.lower():
 			print("Now starting {}".format(x))
-			os.system("python {}".format(x))
+			os.system("python -u {}".format(x))
