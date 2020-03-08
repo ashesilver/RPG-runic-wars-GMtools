@@ -66,7 +66,7 @@ class Graphics(Resolutions):
 		return self.name
 
 	def __del__(self):
-		if options["debug"]:
+		if options["debug"] :
 			print("{1} destructed at {0:.2f}s afar from {start_time}".format(time.time()-__start_time__,str(self),start_time="{}/{}/{} {}:{}\"{}s".format(time.localtime(__start_time__).tm_mday, time.localtime(__start_time__).tm_mon, time.localtime(__start_time__).tm_year,time.localtime(__start_time__).tm_hour, time.localtime(__start_time__).tm_min, time.localtime(__start_time__).tm_sec)))
 		if self.__class__!=Graphics:
 			self.__class__.instanceCount -= 1
@@ -313,6 +313,7 @@ class Textzone(Graphics):
 		self.focused = False
 		self.hover = False
 		self.text = ""
+		self.textBuffer = ""
 		self.base = text
 
 		self.keylogger = []
@@ -339,8 +340,6 @@ class Textzone(Graphics):
 
 
 		elif not(self.rendered):
-			if options["debug"] :
-				print("rendering text at {}".format(self))
 			self.display = self.textfont.render(self.text, True, (0,0,0))
 			self.rendered = True
 		self.screen.blit(self.display, [self.coordinates[0],self.coordinates[1]+0.1*self.fontsize])
@@ -352,7 +351,12 @@ class Textzone(Graphics):
 			keys = self.getKeys()
 			if "Backspace" in keys and self.text!="":
 				self.backspaceBuffer += 1
-				self.text = self.text[:len(self.text)-1] if (self.backspaceBuffer % 4) == 0 else self.text
+				if (self.backspaceBuffer % 4) == 0 :
+					if self.textBuffer != "" :
+						self.text = self.textBuffer[-1:] + self.text[:-1]
+						self.textBuffer = self.textBuffer[:-1]
+					else :
+						self.text = self.text[:-1]
 				if self.text == "":
 					self.focused = False
 				self.rendered = False
@@ -400,12 +404,17 @@ class Textzone(Graphics):
 		elif self.leftClick :
 			self.rendered = False
 			self.focused = False
-		if options["debug"] :
-			print("hover : {},focused :{}".format(self.hover,self.focused))
+
+	def wrap(self,inp):
+		if len(self.text)+len(inp) > self.maxlength :
+			self.textBuffer += self.text[:self.maxlength-len(self.text)+len(inp)]
+			self.text = self.text[len(self.text)+len(inp)-self.maxlength:]
+		return inp
+
 
 	def graphicUpdate(self):
-		pygame.draw.rect(self.screen, (255,255,255),[self.coordinates[0],self.coordinates[1],int((self.fontsize+0.5)*self.maxlength),int(self.fontsize*1.2)])
-		self.write(self.input())
+		#pygame.draw.rect(self.screen, (255,255,255),[self.coordinates[0],self.coordinates[1],int((self.fontsize+0.5)*self.maxlength),int(self.fontsize*1.2)])
+		self.write(self.wrap(self.input()))
 		if self.text == "" and self.focused :
 			self.backspaceBuffer = 0
 
@@ -413,8 +422,12 @@ class Textzone(Graphics):
 	def __call__(self):
 		self.mouseover()
 		self.graphicUpdate()
-		#print("focus : {}, hov : {}".format(self.focused,self.hover))
-		return self.text
+		if options["debug"] :
+			#print("focus : {}, hov : {}".format(self.focused,self.hover))
+			#print("rendering text at {}".format(self))
+			#print(self.text)
+			pass
+		return self.textBuffer+self.text
 
 
 ######## Core
@@ -431,7 +444,7 @@ if __name__ == '__main__':
 	for x in files:
 		if "main" in x.lower():
 			print("Now starting {}".format(x))
-			os.system("python -u {} -c {}".format(x,os.getcwd()))
+			os.system("python -u {} -c {} -d".format(x,os.getcwd()))
 			quit()
 
 options = {
