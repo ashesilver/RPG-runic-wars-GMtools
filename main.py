@@ -40,7 +40,9 @@ while not (exit) :
 			window.bckg = "./img/sheeteditor_background.png"
 	elif mainmenu :
 		### debug for kernel.Textzone
-		testzone()
+		if testzone()== "open new main":
+			kernel.os.system("python -u {} -c {}".format("main.py",kernel.os.getcwd()))
+			quit()
 
 
 

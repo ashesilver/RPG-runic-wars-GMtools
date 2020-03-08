@@ -1,2 +1,4 @@
 __pycache__
 *.pyc
+kernelC.py
+mainC.py

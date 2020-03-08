@@ -1,16 +1,15 @@
 #!/bin/usr/python3
 # -*- coding:utf-8 -*-
 
-__version__ = "0.0.3"
-
 import os,warnings,sys,time
 import pygame
 from pygame.locals import *
 
+__version__ = "0.1.0"
 __file__ = sys.argv[0]
 __system_args__ = sys.argv[1:]
 __start_time__ = time.time()
-	
+
 class Resolutions():
 	"""Main class for all resolutions"""
 	screen_h,screen_l = None,None
@@ -42,38 +41,6 @@ class Graphics(Resolutions):
 	screen_h = int(pygame.display.Info().current_h*90/100)
 	clock = pygame.time.Clock()
 
-	def inputSystemTreatment(self):
-
-		self.options = {
-			"caption" : "Pygame kernel v"+__version__,
-			"resolution" : [Graphics.screen_l,Graphics.screen_h],
-			"helper" : "Pygame kernel v{v}\n".format(v=__version__) +
-				"options :\n\n-c / --caption : << (use) -c caption >>\n sets a custom name for your pygame window\n" +
-				"-r / --resolution : << (use) -r width height >>\n sets a custom resolutions for your pygame window\n" +
-				"-i / --icon : << (use) -i filepath >>\n sets a custom icon for your pygame window\n" +
-				"-d / --debug / -v / --verbose: << (use) -d\n sets dev/debug mode\n",
-			"icon" : None,
-			"debug" : False,
-			"verbose" : False
-		}
-		if isinstance(self,Graphics):
-			for x in __system_args__:
-				if "-c" in x or "--caption" in x :
-					self.options["caption"] = __system_args__[__system_args__.index(x)+1]
-				elif "-r" in x or "--resolution" in x :
-					self.options["resolution"] = [int(__system_args__[__system_args__.index(x)+1]),int(__system_args__[__system_args__.index(x)+2])]
-				elif "-i" in x or "--icon" in x :
-					self.options["icon"] = __system_args__[__system_args__.index(x)+1]
-				elif "-d" in x or "--debug" in x :
-					self.options["debug"] = True
-				elif "-v" in x or "--verbose" in x :
-					self.options["verbose"] = True
-				elif "-h" in x or "--help" in x :
-					print(self.options["helper"])
-					del self
-					quit()
-
-
 	def __init__(self,size=(None,None)):
 
 		#print(sys.argv)
@@ -81,22 +48,40 @@ class Graphics(Resolutions):
 		if size!=(None,None):
 			(Graphics.screen_l,Graphics.screen_h) = size
 
-		self.inputSystemTreatment()
-		Graphics.screen = pygame.display.set_mode(self.options["resolution"])
-		if [Graphics.screen_l,Graphics.screen_h] != self.options["resolution"] :
-			Graphics.screen_l = self.options["resolution"][0]
-			Graphics.screen_h = self.options["resolution"][1]
+		Graphics.screen = pygame.display.set_mode(options["resolution"])
+		if [Graphics.screen_l,Graphics.screen_h] != options["resolution"] :
+			Graphics.screen_l = options["resolution"][0]
+			Graphics.screen_h = options["resolution"][1]
 		
 		self._bckg = None
+		self.caption = options["caption"]
+		del self.name
+
+		#self.loadBasicAttributes()
 		#self.loadKeysAttributes()
 		#self.loadMouseAttributes()
 
 		#print(pygame.display.get_caption())
+	def __repr__(self):
+		return self.name
 
 	def __del__(self):
-		if self.options["debug"]:
-			print("{1} destructed at {0:.2f}s afar from {start_time}".format(time.time()-__start_time__,str(self)[1:len(str(self))- 23],start_time="{}/{}/{} {}:{}\"{}s".format(time.localtime(__start_time__).tm_mday, time.localtime(__start_time__).tm_mon, time.localtime(__start_time__).tm_year,time.localtime(__start_time__).tm_hour, time.localtime(__start_time__).tm_min, time.localtime(__start_time__).tm_sec)))
+		if options["debug"]:
+			print("{1} destructed at {0:.2f}s afar from {start_time}".format(time.time()-__start_time__,str(self),start_time="{}/{}/{} {}:{}\"{}s".format(time.localtime(__start_time__).tm_mday, time.localtime(__start_time__).tm_mon, time.localtime(__start_time__).tm_year,time.localtime(__start_time__).tm_hour, time.localtime(__start_time__).tm_min, time.localtime(__start_time__).tm_sec)))
+		if self.__class__!=Graphics:
+			self.__class__.instanceCount -= 1
 
+	@property
+	def name(self):
+		return self._name
+
+	@name.setter
+	def name(self, text):
+		self._name = text
+
+	@name.deleter
+	def name(self):
+		self._name = "{} instance n°{}".format(self.__class__,self.instanceCount) if self.__class__!=Graphics else self.caption+ " Window"
 
 	def loadKeysAttributes(self):
 		""" cross-platform compatibility in progress
@@ -125,7 +110,6 @@ class Graphics(Resolutions):
 	def loadBasicAttributes(self):
 
 		self.square = pygame.image.load("./img/whitesquare.png").convert()
-		self._caption = "pygame kernel" if pygame.display.get_caption()[0]=="pygame window" else sys.argv[1]  #### to be finished !!!!
 
 	#DISPLAY METHODS
 	
@@ -197,7 +181,7 @@ class Graphics(Resolutions):
 
 	@caption.deleter
 	def caption(self):
-		pygame.display.set_caption(self.options["caption"])
+		pygame.display.set_caption(options["caption"])
 
 	#GETKEYS/MOUSE
 
@@ -243,8 +227,12 @@ class Graphics(Resolutions):
 
 class Button(Graphics):
 	"""UI clickable elements """
+
+	instanceCount = 0
 	def __init__(self,pos,size,*imgadr):
-		self.inputSystemTreatment()
+
+		Button.instanceCount += 1
+		del self.name
 		self.zone =[pos,size]
 		self.clicked= False
 		self.hover=False
@@ -284,11 +272,14 @@ class Button(Graphics):
 		if (( self.zone[0][0] <= mp[0] and self.zone[0][0]+self.zone[1][0] >= mp[0] ) and ( self.zone[0][1] <= mp[1] and self.zone[0][1]+self.zone[1][1] >= mp[1] )):
 			if self.leftClick :
 				self.clicked = True
+				self.caption = self.name
 			elif self.clicked and not self.leftClick :
+				del self.caption
 				return True
 			else :
 				self.hover = True
 		else :
+			del self.caption
 			self.hover = False
 			self.clicked = False
 		return False
@@ -308,9 +299,12 @@ class Button(Graphics):
 class Textzone(Graphics):
 	"""docstring for Textzone"""
 
+	instanceCount = 0
+
 	def __init__(self, fontsize, coordinates, maxlength = 100, text = "Enter your text here"):
 
-		self.inputSystemTreatment()
+		Textzone.instanceCount+=1
+		del self.name
 
 		self.fontsize = fontsize
 		self.coordinates = coordinates
@@ -323,25 +317,32 @@ class Textzone(Graphics):
 
 		self.keylogger = []
 		self.backspaceBuffer = 0
-		self.rendered = time.time() - __start_time__
+		self.rendered = False
 
 
 	def write(self, text = ""):
 		if text != "":
 			self.text += text
 
-		elif self.text == "":
-			if not(self.focused):
-				self.display = self.textfont.render(self.base, True, (150,150,150))
+		elif self.text == "" and not(self.rendered):
+			if self.focused :
+				self.display = self.textfont.render(" ", True, (255,255,255))
+				self.rendered = True
 
 			elif self.hover :
-				self.display = self.textfont.render(self.base, True, (0,0,0))
+				self.display = self.textfont.render(self.base, True, (75,75,75))
+				self.rendered = True
 
-			elif self.focused :
-				self.display = self.textfont.render(" ", True, (255,255,255))
+			elif not(self.focused):
+				self.display = self.textfont.render(self.base, True, (150,150,150))
+				self.rendered = True
 
-		else :
+
+		elif not(self.rendered):
+			if options["debug"] :
+				print("rendering text at {}".format(self))
 			self.display = self.textfont.render(self.text, True, (0,0,0))
+			self.rendered = True
 		self.screen.blit(self.display, [self.coordinates[0],self.coordinates[1]+0.1*self.fontsize])
 
 	def input(self):
@@ -352,23 +353,31 @@ class Textzone(Graphics):
 			if "Backspace" in keys and self.text!="":
 				self.backspaceBuffer += 1
 				self.text = self.text[:len(self.text)-1] if (self.backspaceBuffer % 4) == 0 else self.text
+				if self.text == "":
+					self.focused = False
+				self.rendered = False
 				return ""
 			for x in keys :
 				if x == "VerrMaj":
 						verrMaj = True
 				elif not x in self.keylogger:
 					self.keylogger.append(x)
-					if len(x) == 1 and ("Maj" in keys or "Maj" in self.keylogger or verrMaj):
-						if x in ["&","é","\"","\'","(","-","è","_","ç","à"]:
-							text+=str((["&","é","\"","\'","(","-","è","_","ç","à"].index(x)+1)%10)
-						elif x == ")" :
-							text+="°"
-						elif x == "=":
-							text+="+"
-						else :
-							text+=x.upper()
-					elif len(x) == 1 :
-						text+=x.lower()
+					try :
+						if len(x) == 1 and ("Maj" in keys or "Maj" in self.keylogger or verrMaj):
+							if x in ["&","é","\"","\'","(","-","è","_","ç","à"]:
+								text+=str((["&","é","\"","\'","(","-","è","_","ç","à"].index(x)+1)%10)
+							elif x == ")" :
+								text+="°"
+							elif x == "=":
+								text+="+"
+							else :
+								text+=x.upper()
+						elif len(x) == 1 :
+							text+=x.lower()
+					except Exception as e:
+						raise e
+					else :
+						self.rendered = False
 			for x in self.keylogger:
 				if not x in keys :
 					self.keylogger.pop(self.keylogger.index(x))
@@ -381,12 +390,18 @@ class Textzone(Graphics):
 		if (( self.coordinates[0] <= mp[0] and self.coordinates[0]+(self.fontsize+1)*self.maxlength >= mp[0] ) and ( self.coordinates[1] <= mp[1] and self.coordinates[1]+self.fontsize*2 >= mp[1] )):
 			if self.leftClick :
 				self.focused = True
+				self.rendered = False
 			else :
 				self.hover = True
+				self.rendered = False
 		elif self.hover :
 			self.hover = False
+			self.rendered = False
 		elif self.leftClick :
+			self.rendered = False
 			self.focused = False
+		if options["debug"] :
+			print("hover : {},focused :{}".format(self.hover,self.focused))
 
 	def graphicUpdate(self):
 		pygame.draw.rect(self.screen, (255,255,255),[self.coordinates[0],self.coordinates[1],int((self.fontsize+0.5)*self.maxlength),int(self.fontsize*1.2)])
@@ -400,7 +415,10 @@ class Textzone(Graphics):
 		self.graphicUpdate()
 		#print("focus : {}, hov : {}".format(self.focused,self.hover))
 		return self.text
-		
+
+
+######## Core
+
 
 
 if __name__ == '__main__':
@@ -413,4 +431,33 @@ if __name__ == '__main__':
 	for x in files:
 		if "main" in x.lower():
 			print("Now starting {}".format(x))
-			os.system("python -u {}".format(x))
+			os.system("python -u {} -c {}".format(x,os.getcwd()))
+			quit()
+
+options = {
+	"caption" : "Pygame kernel v"+__version__,
+	"resolution" : [Graphics.screen_l,Graphics.screen_h],
+	"helper" : "Pygame kernel v{v}\n".format(v=__version__) +
+		"options :\n\n-c / --caption : << (use) -c caption >>\n sets a custom name for your pygame window\n" +
+		"-r / --resolution : << (use) -r width height >>\n sets a custom resolutions for your pygame window\n" +
+		"-i / --icon : << (use) -i filepath >>\n sets a custom icon for your pygame window\n" +
+		"-d / --debug / -v / --verbose: << (use) -d\n sets dev/debug mode\n",
+	"icon" : None,
+	"debug" : False,
+	"verbose" : False
+}
+
+for x in __system_args__:
+	if "-c" == x or "--caption" == x :
+		options["caption"] = __system_args__[__system_args__.index(x)+1]
+	elif "-r" == x or "--resolution" == x :
+		options["resolution"] = [int(__system_args__[__system_args__.index(x)+1]),int(__system_args__[__system_args__.index(x)+2])]
+	elif "-i" == x or "--icon" == x :
+		options["icon"] = __system_args__[__system_args__.index(x)+1]
+	elif "-d" == x or "--debug" == x :
+		options["debug"] = True
+	elif "-v" == x or "--verbose" == x :
+		options["verbose"] = True
+	elif "-h" == x or "--help" == x :
+		print(options["helper"])
+		quit()
