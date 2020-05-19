@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 
 import os,warnings,sys,time
-import pygame
+import pygame,pyperclip
 from pygame.locals import *
 
 __version__ = "0.1.0"
@@ -320,6 +320,10 @@ class Textzone(Graphics):
 		self.backspaceBuffer = 0
 		self.rendered = False
 
+		self.selected = ""
+		#self.
+		self.negative = (75,75,75,25)
+
 
 	def write(self, text = ""):
 		if text != "":
@@ -361,6 +365,8 @@ class Textzone(Graphics):
 					self.focused = False
 				self.rendered = False
 				return ""
+			elif "Enter" in keys or "ENTER" in keys :
+				self.focused = False
 			for x in keys :
 				if x == "VerrMaj":
 						verrMaj = True
@@ -413,7 +419,9 @@ class Textzone(Graphics):
 
 
 	def graphicUpdate(self):
-		#pygame.draw.rect(self.screen, (255,255,255),[self.coordinates[0],self.coordinates[1],int((self.fontsize+0.5)*self.maxlength),int(self.fontsize*1.2)])
+		if self.selected != "": #work in progress
+			size = self.textfont.size(self.selected)
+			pygame.draw.rect(self.screen, self.negative,[self.coordinates[0],self.coordinates[1],size[0],size[1]])
 		self.write(self.wrap(self.input()))
 		if self.text == "" and self.focused :
 			self.backspaceBuffer = 0
@@ -431,7 +439,6 @@ class Textzone(Graphics):
 
 
 ######## Core
-
 
 
 if __name__ == '__main__':
