@@ -1,65 +1,123 @@
-import sys
 import socket
-import selectors
-import traceback
-
-import libclient
-
-sel = selectors.DefaultSelector()
-
-
-def create_request(action, value):
-    if action == "search":
-        return dict(
-            type="text/json",
-            encoding="utf-8",
-            content=dict(action=action, value=value),
-        )
-    else:
-        return dict(
-            type="binary/custom-client-binary-type",
-            encoding="binary",
-            content=bytes(action + value, encoding="utf-8"),
-        )
+### Main client specs
+"""
+s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+s.connect(("tters66.freeboxos.fr", 19999))
+response = None
+while response == None:
+    s.recv(128)
+print("connected to server !")"""
+#socket exemple
+"""
+msg = s.recv(1024)
+print(msg.decode("utf-8"))"""
 
 
-def start_connection(host, port, request):
-    addr = (host, port)
-    print("starting connection to", addr)
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.setblocking(False)
-    sock.connect_ex(addr)
-    events = selectors.EVENT_READ | selectors.EVENT_WRITE
-    message = libclient.Message(sel, sock, addr, request)
-    sel.register(sock, events, data=message)
+def clean_console(func):
+    import os
+   
+    def wrapper(*args,**kwargs):
+        if os.name == "nt":
+            os.system("cls")
+        elif os.name == "posix":
+            os.system("clear")
+        result = func(*args,**kwargs)
+        return result
+    
+    return wrapper
+
+def var(*str):
+    res =[]
+    for x in str :
+        try :
+            res.append(globals()[x])
+        except KeyError:
+            globals()[x]=None
+            res.append(globals()[x])
+    return res
+
+@clean_console
+def input_type(func,reset=False):
+    if reset :
+        print("not a valid answer !\n")
+    choice = input("what input type would you like to use ? ( A1 format or Numpad keys )\n  ")
+    if "keys" in choice.lower() or "numpad" in choice.lower() :
+        def wrapper(*args,**kwargs):
+            kwargs['numpad'] = True
+            result = func(*args,**kwargs)
+            return result
+    elif "a1" in choice.lower() or "format" in choice.lower() :
+        def wrapper(*args,**kwargs):
+            result = func(*args,**kwargs)
+            return result
+    else :
+        wrapper = input_type(func,reset=True)
+    return wrapper
+
+@clean_console
+def draw(grid):
+    print(" / 1   2   3 \\\nA: {} | {} | {}\n  ___ ___ ___\n\nB: {} | {} | {}\n  ___ ___ ___\n\nC: {} | {} | {}".format(*tuple(grid)))
+
+@clean_console
+def beatiful_soup(str):
+    print(str)
 
 
-if len(sys.argv) != 5:
-    print("usage:", sys.argv[0], "<host> <port> <action> <value>")
-    sys.exit(1)
+@input_type
+def play(player,grid,numpad=False):
+    fullslots = [[l,n] for l in ["A","B","C"] for n in ["1","2","3"]]
+    if numpad :
+        fullslots = [x for x in range(1,10)]
+    freeslots = [x for x in fullslots if grid[fullslots.index(x)] is " "]
+    selected = ask(player,freeslots);formal_answer = selected.upper()
+    try:
+        if numpad :
+            selected = [ x for x in freeslots if str(x) in formal_answer ][0]
+        else :
+            selected = [ x for x in freeslots if x[0] in formal_answer and x[1] in formal_answer ][0]
+    except IndexError:
+        draw(grid)
+        print(selected,"is no valid placement, please retry (format : {})".format("numpad integer" if numpad else "A1"))
+        grid = play(player,grid)
+    else :
+        grid[fullslots.index(selected)] = var("player_{}".format(player))[0]
+    finally :
+        return grid[:]
+    
+def ask(player,freeslots):
+    return input("player {}'s turn, select a slot : {}\n  ".format(player,freeslots))
 
-host, port = sys.argv[1], int(sys.argv[2])
-action, value = sys.argv[3], sys.argv[4]
-request = create_request(action, value)
-start_connection(host, port, request)
 
-try:
-    while True:
-        events = sel.select(timeout=1)
-        for key, mask in events:
-            message = key.data
-            try:
-                message.process_events(mask)
-            except Exception:
-                print(
-                    "main: error: exception for",
-                    f"{message.addr}:\n{traceback.format_exc()}",
-                )
-                message.close()
-        # Check for a socket being monitored to continue.
-        if not sel.get_map():
-            break
-except KeyboardInterrupt:
-    print("caught keyboard interrupt, exiting")
-finally:
-    sel.close()
+def await_data_from_server(s):
+    data= None
+    while data == None:
+        data = s.recv(1024)
+
+    return data.decode("utf-8")
+
+if __name__ == '__main__':
+
+    s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    s.connect(("tters66.freeboxos.fr", 19999))
+    response = None
+    while response == None:
+        s.recv(128)
+    print("connected to server !")
+
+    data = None
+    while data!="END" :
+        data = await_data_from_server(s)
+        if data.startswith("GRID") :
+            grid = list(data[4:])
+        elif data.startswith("DRAW")
+            draw(grid)
+        elif data.startswith("PLAY"):
+            grid = play(*tuple(data[4:]))
+            s.send(bytes("GRID"+ str(grid)))
+        elif data.startswith("AWAIT"):
+            draw(grid)
+            print("Awaiting for your opponent to play")
+        elif data.startswith("RES"):
+            beatiful_soup(data[3:])
+
+    s.close()
