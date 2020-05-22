@@ -87,6 +87,14 @@ def play(player,grid,numpad=False):
 def ask(player,freeslots):
     return input("player {}'s turn, select a slot : {}\n  ".format(player,freeslots))
 
+def grid_pack(l):
+    s=""
+    for x in l :
+        s+=x
+    return s
+
+def grid_unpack(s):
+    return list(s)
 
 def await_data_from_server(s):
     data= None
@@ -110,12 +118,12 @@ if __name__ == '__main__':
     while data!="END" :
         data = await_data_from_server(s)
         if data.startswith("GRID") :
-            grid = list(data[4:])
+            grid = grid_unpack(data[4:])
         elif data.startswith("DRAW"):
             draw(grid)
         elif data.startswith("PLAY"):
-            grid = play(*tuple(data[4:]))
-            s.send(bytes("GRID"+ str(grid)),"utf-8")
+            grid = play(int(data[4]),grid_unpack(data[5:]))
+            s.send(bytes("GRID"+ grid_pack(grid),"utf-8"))
         elif data.startswith("AWAIT"):
             draw(grid)
             print("Awaiting for your opponent to play")

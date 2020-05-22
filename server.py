@@ -46,6 +46,15 @@ def wincheck(grid):
     else :
         return (0,0)
 
+def grid_pack(l):
+    s=""
+    for x in l :
+        s+=x
+    return s
+
+def grid_unpack(s):
+    return list(s)
+
 def main(clientsockets):
     #base values
 
@@ -61,8 +70,8 @@ def main(clientsockets):
         #draw(grid)
 
         for x in clientsockets :
-            x.send(bytes("GRID"+ str(grid)),"utf-8")
-            x.send(b"DRAW","utf-8")
+            x.send(bytes("GRID"+ grid_pack(grid),"utf-8"))
+            x.send(bytes("DRAW","utf-8"))
 
         #send an await or play flag to clients
         #recieve the updated grid
@@ -70,13 +79,13 @@ def main(clientsockets):
         #grid = play(1+(turn%2),grid)
 
         args = (1+(turn%2),grid)
-        clientsockets[turn%2].send(bytes("PLAY"+str(args),"utf-8"))
-        clientsockets[(turn%2+1)%2].send(b"AWAIT","utf-8")
+        clientsockets[turn%2].send(bytes("PLAY"+str(args[0])+grid_pack(args[1]),"utf-8"))
+        clientsockets[(turn%2+1)%2].send(bytes("AWAIT","utf-8"))
 
         data = await_data_from_client(clientsockets[turn%2])
         if data.startswith("GRID") :
-            grid = list(data[4:])
-        clientsockets[(turn%2+1)%2].send(bytes("GRID"+ str(grid),"utf-8"))
+            grid = grid_unpack(data[4:])
+        clientsockets[(turn%2+1)%2].send(bytes("GRID"+ grid_pack(grid),"utf-8"))
 
         winX,winO = wincheck(grid)
         turn+=1
@@ -84,13 +93,13 @@ def main(clientsockets):
     def win_print():
         if winX:
             for x in clientsockets :
-                x.send(b"RESplayer 1 wins !","utf-8")
+                x.send(bytes("RESplayer 1 wins !","utf-8"))
         elif winO :
             for x in clientsockets :
-                x.send(b"RESplayer 2 wins !","utf-8")
+                x.send(bytes("RESplayer 2 wins !","utf-8"))
         else :
             for x in clientsockets :
-                x.send(b"RESdraw !","utf-8")
+                x.send(bytes("RESdraw !","utf-8"))
             
     win_print()
 
@@ -113,7 +122,7 @@ try :
             else :
                 player_2_s, add2 = s.accept()
                 print(f"got both : {add2}")
-                player_2_s.send(b"Sucessfully connected as player_2!","utf-8")
+                player_2_s.send(bytes("Sucessfully connected as player_2!","utf-8"))
 
 
         var("empty", "player_1", "player_2")
@@ -122,7 +131,7 @@ try :
         main((player_1_s,player_2_s))
 
         for x in (player_1_s,player_2_s) :
-            x.send(b"END",'utf-8')
+            x.send(bytes("END",'utf-8'))
 
         for x in (player_1_s,player_2_s) :
             x.close()
