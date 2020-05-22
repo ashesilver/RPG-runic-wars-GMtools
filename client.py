@@ -103,8 +103,8 @@ if __name__ == '__main__':
     s.connect(("tters66.freeboxos.fr", 19999))
     response = None
     while response == None:
-        s.recv(128)
-    print("connected to server !")
+        response = await_data_from_server(s)
+    print(f"connected to server !\n{response}")
 
     data = None
     while data!="END" :
@@ -115,7 +115,7 @@ if __name__ == '__main__':
             draw(grid)
         elif data.startswith("PLAY"):
             grid = play(*tuple(data[4:]))
-            s.send(bytes("GRID"+ str(grid)))
+            s.send(bytes("GRID"+ str(grid)),"utf-8")
         elif data.startswith("AWAIT"):
             draw(grid)
             print("Awaiting for your opponent to play")
