@@ -147,3 +147,6 @@ if __name__ == '__main__':
             beatiful_soup(data[3:])
 
     s.close()
+
+
+input("press enter to close the PyVM")
