@@ -69,10 +69,13 @@ def main(clientsockets):
         #send draw flag
         #draw(grid)
 
+        print("debug stop point 1")
         clientsockets[turn%2].send(bytes("GRID"+ grid_pack(grid),"utf-8"))
         clientsockets[(turn%2+1)%2].send(bytes("GRID"+ grid_pack(grid),"utf-8"))
+        print("debug stop point 2")
         clientsockets[turn%2].send(bytes("DRAW","utf-8"))
         clientsockets[(turn%2+1)%2].send(bytes("DRAW","utf-8"))
+        print("debug stop point 3")
         #send an await or play flag to clients
         #recieve the updated grid
         #send to the awaiting client the new grid
@@ -111,18 +114,18 @@ try :
         s.bind((socket.gethostname(),19999))
         s.listen(10)
 
-        player_1_s, player_2_s = None, None
+        r, p = None, None
 
-        while player_1_s == None or player_2_s == None:
-            if player_1_s == None :
-                player_1_s, add1 = s.accept()
+        while r == None or p == None:
+            if r == None :
+                r, add1 = s.accept()
                 print(f"got one : {add1}")
-                player_1_s.send(bytes("19998","utf-8"))
+                r.send(bytes("19998","utf-8"))
                 #player_1_s.send(bytes("Sucessfully connected as player_1!","utf-8"))
             else :
-                player_2_s, add2 = s.accept()
+                p, add2 = s.accept()
                 print(f"got both : {add2}")
-                player_2_s.send(bytes("19997","utf-8"))
+                p.send(bytes("19997","utf-8"))
                 #player_2_s.send(bytes("Sucessfully connected as player_2!","utf-8"))
 
         s.close()
@@ -150,6 +153,7 @@ try :
         var("empty", "player_1", "player_2")
         empty = " "; player_1 = "X"; player_2 = "O"
 
+        print("launching game")
         main((player_1_s,player_2_s))
 
         for x in (player_1_s,player_2_s) :

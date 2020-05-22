@@ -117,6 +117,9 @@ if __name__ == '__main__':
     except ConnectionResetError:
         s.close()
 
+    s = None
+    print(f"conneting to port {response}")
+
     s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     s.connect(("tters66.freeboxos.fr", int(response)))
     response = None
