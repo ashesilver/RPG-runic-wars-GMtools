@@ -97,11 +97,14 @@ def grid_unpack(s):
     return list(s)
 
 def await_data_from_server(s):
+    running = True
     data= None
-    while data == None:
-        data = s.recv(1024)
-
-    return data.decode("utf-8")
+    while running:
+        data += s.recv(1)
+        if ("-TRover-" in data.decode("utf-8")) :
+            running =False
+            data = data.decode("utf-8")[:-8]
+    return data
 
 if __name__ == '__main__':
     var("empty", "player_1", "player_2")
@@ -136,7 +139,7 @@ if __name__ == '__main__':
             draw(grid)
         elif data.startswith("PLAY"):
             grid = play(int(data[4]),grid_unpack(data[5:]))
-            s.send(bytes("GRID"+ grid_pack(grid),"utf-8"))
+            s.send(bytes("GRID"+ grid_pack(grid)+"-TRover-","utf-8"))
         elif data.startswith("AWAIT"):
             draw(grid)
             print("Awaiting for your opponent to play")
