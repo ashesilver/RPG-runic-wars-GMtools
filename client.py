@@ -96,6 +96,8 @@ def await_data_from_server(s):
     return data.decode("utf-8")
 
 if __name__ == '__main__':
+    var("empty", "player_1", "player_2")
+    empty = " "; player_1 = "X"; player_2 = "O"
 
     s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     s.connect(("tters66.freeboxos.fr", 19999))
@@ -109,7 +111,7 @@ if __name__ == '__main__':
         data = await_data_from_server(s)
         if data.startswith("GRID") :
             grid = list(data[4:])
-        elif data.startswith("DRAW")
+        elif data.startswith("DRAW"):
             draw(grid)
         elif data.startswith("PLAY"):
             grid = play(*tuple(data[4:]))

@@ -14,6 +14,16 @@ while True:
     print(f"Connection from {address} has been established.")
     clientsocket.send(bytes("Hey there!!!","utf-8"))"""
 
+def var(*str):
+    res =[]
+    for x in str :
+        try :
+            res.append(globals()[x])
+        except KeyError:
+            globals()[x]=None
+            res.append(globals()[x])
+    return res
+
 def await_data_from_client(s):
     data= None
     while data == None:
