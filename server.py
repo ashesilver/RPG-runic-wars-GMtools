@@ -26,13 +26,13 @@ def var(*str):
 
 def await_data_from_client(s):
     running = True
-    data= None
+    data=bytearray()
     while running:
-        data += s.recv(1)
+        data.extend(s.recv(1))
         if ("-TRover-" in data.decode("utf-8")) :
             running =False
-            data = data.decode("utf-8")[:-8]
-    return data
+            data = data.decode("utf-8")
+    return data[:-8]
 
 def wincheck(grid):
     fullslots = [[l,n] for l in ["A","B","C"] for n in ["1","2","3"]]

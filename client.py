@@ -98,9 +98,9 @@ def grid_unpack(s):
 
 def await_data_from_server(s):
     running = True
-    data= None
+    data=bytearray()
     while running:
-        data += s.recv(1)
+        data.extend(s.recv(1))
         if ("-TRover-" in data.decode("utf-8")) :
             running =False
             data = data.decode("utf-8")
