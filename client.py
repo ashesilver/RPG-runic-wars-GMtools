@@ -103,8 +103,8 @@ def await_data_from_server(s):
         data += s.recv(1)
         if ("-TRover-" in data.decode("utf-8")) :
             running =False
-            data = data.decode("utf-8")[:-8]
-    return data
+            data = data.decode("utf-8")
+    return data[:-8]
 
 if __name__ == '__main__':
     var("empty", "player_1", "player_2")
