@@ -14,6 +14,12 @@ while True:
     print(f"Connection from {address} has been established.")
     clientsocket.send(bytes("Hey there!!!","utf-8"))"""
 
+def await_data_from_client(s):
+    data= None
+    while data == None:
+        data = s.recv(1024)
+
+    return data.decode("utf-8")
 
 def wincheck(grid):
     fullslots = [[l,n] for l in ["A","B","C"] for n in ["1","2","3"]]
@@ -48,13 +54,19 @@ def main(clientsockets):
             x.send(bytes("GRID"+ str(grid)))
             x.send(b"DRAW")
 
-        csd = {"player_1_s" : clientsockets[0], "player_2_s" : clientsockets[1]}
         #send an await or play flag to clients
         #recieve the updated grid
         #send to the awaiting client the new grid
         #grid = play(1+(turn%2),grid)
+
         args = (1+(turn%2),grid)
-        csd[f"player_{str(args[0]-1)}_s"].send(bytes("PLAY"+str(args)))
+        clientsockets[turn%2].send(bytes("PLAY"+str(args)))
+        clientsockets[(turn%2+1)%2].send(b"AWAIT")
+
+        data = await_data_from_client(clientsockets[turn%2])
+        if data.startswith("GRID") :
+            grid = list(data[4:])
+        clientsockets[(turn%2+1)%2].send(bytes("GRID"+ str(grid)))
 
         winX,winO = wincheck(grid)
         turn+=1
