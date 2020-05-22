@@ -69,10 +69,10 @@ def main(clientsockets):
         #send draw flag
         #draw(grid)
 
-        for x in clientsockets :
-            x.send(bytes("GRID"+ grid_pack(grid),"utf-8"))
-            x.send(bytes("DRAW","utf-8"))
-
+        clientsockets[turn%2].send(bytes("GRID"+ grid_pack(grid),"utf-8"))
+        clientsockets[(turn%2+1)%2].send(bytes("GRID"+ grid_pack(grid),"utf-8"))
+        clientsockets[turn%2].send(bytes("DRAW","utf-8"))
+        clientsockets[(turn%2+1)%2].send(bytes("DRAW","utf-8"))
         #send an await or play flag to clients
         #recieve the updated grid
         #send to the awaiting client the new grid
@@ -107,7 +107,6 @@ try :
     if __name__ == "__main__" :
         __credits__ = "Tersinet Thibault"
 
-
         s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         s.bind((socket.gethostname(),19999))
         s.listen(10)
@@ -118,9 +117,32 @@ try :
             if player_1_s == None :
                 player_1_s, add1 = s.accept()
                 print(f"got one : {add1}")
-                player_1_s.send(bytes("Sucessfully connected as player_1!","utf-8"))
+                player_1_s.send(bytes("19998","utf-8"))
+                #player_1_s.send(bytes("Sucessfully connected as player_1!","utf-8"))
             else :
                 player_2_s, add2 = s.accept()
+                print(f"got both : {add2}")
+                player_2_s.send(bytes("19997","utf-8"))
+                #player_2_s.send(bytes("Sucessfully connected as player_2!","utf-8"))
+
+        s.close()
+
+        s1 = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        s1.bind((socket.gethostname(),19998))
+        s1.listen(2)
+        s2 = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        s2.bind((socket.gethostname(),19997))
+        s2.listen(2)
+
+        player_1_s, player_2_s = None, None
+
+        while player_1_s == None or player_2_s == None:
+            if player_1_s == None :
+                player_1_s, add1 = s1.accept()
+                print(f"got one : {add1}")
+                player_1_s.send(bytes("Sucessfully connected as player_1!","utf-8"))
+            else :
+                player_2_s, add2 = s2.accept()
                 print(f"got both : {add2}")
                 player_2_s.send(bytes("Sucessfully connected as player_2!","utf-8"))
 
@@ -133,7 +155,7 @@ try :
         for x in (player_1_s,player_2_s) :
             x.send(bytes("END",'utf-8'))
 
-        for x in (player_1_s,player_2_s) :
+        for x in (s1,s2) :
             x.close()
 
         """

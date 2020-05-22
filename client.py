@@ -109,6 +109,16 @@ if __name__ == '__main__':
 
     s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     s.connect(("tters66.freeboxos.fr", 19999))
+
+    response = None
+    try:
+        while response == None:
+            response = await_data_from_server(s)
+    except ConnectionResetError:
+        s.close()
+
+    s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    s.connect(("tters66.freeboxos.fr", int(response)))
     response = None
     while response == None:
         response = await_data_from_server(s)
